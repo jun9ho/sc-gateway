@@ -16,9 +16,44 @@ spring:
     gateway:
       routes:
         - id: hello_route # 새로 추가할 라우트의 ID
-          uri: ${HELLO_SERVICE_URI:http://localhost:9765} # 타겟 서비스의 URI
+          uri: ${HELLO_SERVICE_URI:http://localhost:8765} # 타겟 서비스의 URI
           predicates:
             - Path=/hello # 매칭할 경로 (정확히 /hello)
+
+          # abc2hello_route
+          # 1. http://localhost:9000/hello 로 들어오면
+          # 2. ${HELLO_SERVICE_URI:http://localhost:8765}/hello 로 연결
+
+        - id: abc2hello_route # 새로 추가할 라우트의 ID
+          uri: ${HELLO_SERVICE_URI:http://localhost:8765} # 타겟 서비스의 URI
+          predicates:
+            - Path=/abc
+
+          # abc2hello_route
+          # 1. http://localhost:9000/abc 로 들어오면
+          # 2. ${HELLO_SERVICE_URI:http://localhost:8765}/abc 로 연결
+
+        - id: def2hello_ok_route # 새로 추가할 라우트의 ID
+          uri: ${HELLO_SERVICE_URI:http://localhost:8765} # 타겟 서비스의 URI
+          predicates:
+            - Path=/def
+          filters:
+            - RewritePath=/def, /hello
+
+          # abc2hello_ok_route
+          # 1. http://localhost:9000/def 로 들어오면
+          # 2. 필터에서 def 를 hello 로 바꾸어서 설정된 uri 로 보냄
+          # 3. ${HELLO_SERVICE_URI:http://localhost:8765}/hello 로 연결
+
+          # Eureka에 등록된 'USER-SERVICE' 서비스로 라우팅하는 새로운 설정
+        - id: users_users_route # 통합된 라우트 ID
+          uri: lb://USER-SERVICE # USERS 서비스로 라우팅
+          predicates:
+            - Path=/api/users/** # 클라이언트 요청 경로 (뒤에 무엇이 오든 상관 없음)
+          filters:
+            # '/api/uuu' 접두사를 제거하고 남은 경로를 전달합니다.
+            - RewritePath=/api/users/(?<segment>.*), /${segment}
+
 logging:
   level:
     # Spring Cloud Gateway의 라우팅, 필터 체인 관련 로그
@@ -29,4 +64,3 @@ logging:
 
     # Spring WebFlux (게이트웨이 기반 기술) 관련 로그
     org.springframework.web.reactive: DEBUG
-
