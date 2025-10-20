@@ -9,7 +9,7 @@ spring:
     gateway:
       routes:
         - id: hello_route # 새로 추가할 라우트의 ID
-          uri: http://localhost:8765 # 타겟 서비스의 URI
+          uri: ${HELLO_SERVICE_URI:http://localhost:9765} # 타겟 서비스의 URI
           predicates:
             - Path=/hello # 매칭할 경로 (정확히 /hello)
 logging:
